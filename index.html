@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레벨업! 영어 단어 카드</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        /* 애니메이션 키프레임 */
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        /* ★★★ 시작 버튼을 위한 펄스 애니메이션 ★★★ */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+            50% { transform: scale(1.05); box-shadow: 0 8px 25px rgba(255, 111, 97, 0.5); }
+            100% { transform: scale(1); box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        }
+
+        body {
+            font-family: 'Jua', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(-45deg, #a8e6cf, #dcedc1, #ffd3b6, #ffaaa5);
+            background-size: 400% 400%;
+            animation: gradient-animation 15s ease infinite;
+        }
+        .app-container {
+            /* ★★★ 되돌아가기 버튼 위치의 기준점이 되도록 relative 속성 추가 ★★★ */
+            position: relative; 
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 30px 40px;
+            border-radius: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        /* --- 레벨 선택 화면 --- */
+        #level-selector { padding: 20px; }
+        #level-selector h2 { margin-top: 0; color: #26547c; }
+        .level-options label { display: inline-block; margin: 10px; padding: 10px 20px; background-color: white; border-radius: 20px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .level-options input[type="radio"] { display: none; }
+        .level-options input[type="radio"]:checked + span { font-weight: bold; color: #ff6f61; }
+        
+        /* ★★★ 예쁘게 바뀐 학습 시작 버튼 스타일 ★★★ */
+        #start-btn {
+            margin-top: 25px;
+            padding: 15px 40px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 50px;
+            border: none;
+            color: white;
+            background-color: #ff6f61;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            animation: pulse 2s infinite; /* 펄스 애니메이션 적용 */
+        }
+        #start-btn:hover {
+            animation-play-state: paused; /* 호버 시 애니메이션 멈춤 */
+            transform: scale(1.05);
+        }
+
+        /* --- 메인 학습 화면 --- */
+        #main-app { display: none; }
+        
+        /* ★★★ 되돌아가기 버튼 스타일 ★★★ */
+        #back-to-levels-btn {
+            position: absolute;
+            top: -20px;
+            right: 25px;
+            padding: 8px 12px;
+            font-size: 14px;
+            background-color: #a5a5a5;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #back-to-levels-btn:hover {
+            background-color: #8e8e8e;
+        }
+        
+        h1 { color: #ff6f61; font-size: 42px; text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8); margin-top: 0; margin-bottom: 15px; }
+        .card-container { perspective: 1500px; margin: 20px auto; }
+        .card { width: 350px; height: 220px; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); border: 5px solid white; }
+        .card-label { font-size: 14px; background-color: rgba(0, 0, 0, 0.1); padding: 2px 10px; border-radius: 10px; margin-bottom: 10px; }
+        .word-text { font-size: 38px; color: #26547c; }
+        .card-front { background: linear-gradient(135deg, #ffd166, #ffc44f); }
+        .card-back { background: linear-gradient(135deg, #06d6a0, #05c291); transform: rotateY(180deg); }
+        .progress-area { width: 100%; margin-bottom: 15px; }
+        #progress-text { font-size: 16px; color: #555; margin-bottom: 5px; }
+        .progress-container { width: 100%; height: 15px; background-color: rgba(0, 0, 0, 0.1); border-radius: 10px; overflow: hidden; }
+        #progress-bar { width: 0%; height: 100%; background-color: #ff6f61; border-radius: 10px; transition: width 0.5s ease-out; }
+        .controls { margin-top: 15px; display: flex; justify-content: center; align-items: center; }
+        .controls button { font-family: 'Jua', sans-serif; padding: 12px 22px; font-size: 16px; margin: 0 8px; cursor: pointer; border: none; border-radius: 50px; background-color: #ff6f61; color: white; box-shadow: 0 5px 10px rgba(0,0,0,0.15); transition: all 0.2s ease-in-out; }
+        .controls button:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        .controls button:active { transform: translateY(-2px) scale(0.98); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        #shuffle-btn { background-color: #7f8c8d; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- 레벨 선택 화면 -->
+        <div id="level-selector">
+            <h2>학습할 단어 레벨을 선택하세요!</h2>
+            <div class="level-options">
+                <label><input type="radio" name="level" value="elementary" checked> <span>초등</span></label>
+                <label><input type="radio" name="level" value="middle"> <span>중등</span></label>
+                <label><input type="radio" name="level" value="high"> <span>고등</span></label>
+                <label><input type="radio" name="level" value="all"> <span>전체</span></label>
+            </div>
+            <!-- ★★★ 아이콘과 클래스가 추가된 시작 버튼 ★★★ -->
+            <button id="start-btn">▶ 학습 시작!</button>
+        </div>
+
+        <!-- 메인 학습 화면 -->
+        <div id="main-app">
+            <!-- ★★★ 되돌아가기 버튼 HTML 추가 ★★★ -->
+            <button id="back-to-levels-btn">🏠 레벨 선택</button>
+            
+            <h1>레벨업! 영어 단어 카드</h1>
+            <div class="progress-area">
+                <p id="progress-text">1 / 100</p>
+                <div class="progress-container"><div id="progress-bar"></div></div>
+            </div>
+            <div class="card-container">
+                <div id="card" class="card">
+                    <div class="card-face card-front">
+                        <span class="card-label">ENGLISH</span><p id="english-word" class="word-text"></p>
+                    </div>
+                    <div class="card-face card-back">
+                        <span class="card-label">KOREAN</span><p id="korean-meaning" class="word-text"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <button id="prev-btn">◀ 이전</button>
+                <button id="shuffle-btn">🔀 섞기</button>
+                <button id="next-btn">다음 ▶</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="words.js"></script>
+
+    <script>
+        // DOM 요소 가져오기
+        const levelSelector = document.getElementById('level-selector');
+        const mainApp = document.getElementById('main-app');
+        const startBtn = document.getElementById('start-btn');
+        const card = document.getElementById('card');
+        const englishWordEl = document.getElementById('english-word');
+        const koreanMeaningEl = document.getElementById('korean-meaning');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        
+        // ★★★ 되돌아가기 버튼 DOM 요소 추가 ★★★
+        const backToLevelsBtn = document.getElementById('back-to-levels-btn');
+
+        let currentWords = [];
+        let currentWordIndex = 0;
+
+        startBtn.addEventListener('click', () => {
+            const selectedLevel = document.querySelector('input[name="level"]:checked').value;
+            setLevel(selectedLevel);
+            levelSelector.style.display = 'none';
+            mainApp.style.display = 'block';
+        });
+
+        // ★★★ 되돌아가기 버튼 이벤트 리스너 추가 ★★★
+        backToLevelsBtn.addEventListener('click', () => {
+            mainApp.style.display = 'none';      // 메인 앱 숨기기
+            levelSelector.style.display = 'block'; // 레벨 선택 화면 보이기
+            card.classList.remove('is-flipped'); // 혹시 카드가 뒤집혀있으면 원상태로
+        });
+
+        function setLevel(level) {
+            if (level === 'all') {
+                currentWords = allWords.elementary.concat(allWords.middle, allWords.high);
+            } else {
+                currentWords = allWords[level];
+            }
+            shuffleWords();
+        }
+        function updateProgress() {
+            if (currentWords.length === 0) return;
+            const progressPercent = ((currentWordIndex + 1) / currentWords.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+            progressText.textContent = `${currentWordIndex + 1} / ${currentWords.length}`;
+        }
+        function showWord() {
+            if (currentWords.length === 0) return;
+            englishWordEl.textContent = currentWords[currentWordIndex].english;
+            koreanMeaningEl.textContent = currentWords[currentWordIndex].korean;
+            updateProgress();
+        }
+        function flipCard() { card.classList.toggle('is-flipped'); }
+        function shuffleWords() {
+            for (let i = currentWords.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentWords[i], currentWords[j]] = [currentWords[j], currentWords[i]];
+            }
+            currentWordIndex = 0;
+            card.classList.remove('is-flipped');
+            showWord();
+        }
+        card.addEventListener('click', flipCard);
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space' && mainApp.style.display === 'block') {
+                event.preventDefault();
+                flipCard();
+            }
+        });
+        nextBtn.addEventListener('click', () => {
+            currentWordIndex = (currentWordIndex + 1) % currentWords.length;
+            if (card.classList.contains('is-flipped')) {
+                card.classList.remove('is-flipped');
+                setTimeout(() => { showWord(); }, 350);
+            } else {
+                showWord();
+            }
+        });
+        prevBtn.addEventListener('click', () => {
+            currentWordIndex = (currentWordIndex - 1 + currentWords.length) % currentWords.length;
+            if (card.classList.contains('is-flipped')) {
+                card.classList.remove('is-flipped');
+                setTimeout(() => { showWord(); }, 350);
+            } else {
+                showWord();
+            }
+        });
+        shuffleBtn.addEventListener('click', shuffleWords);
+    </script>
+
+</body>
+</html>
